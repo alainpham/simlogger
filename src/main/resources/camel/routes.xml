@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<routes xmlns="http://camel.apache.org/schema/spring" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://camel.apache.org/schema/spring ./../xsd/camel-spring.xsd">
+    
+    <route id="parse-data">
+        <from id="parse-data-from" uri="timer:parse-data?repeatCount=1&amp;delay=-1"/>
+        <setBody>
+            <method beanType="net.alainpham.SimLogger" method="getInstance().getRawString()"/>
+        </setBody>
+        <unmarshal>
+            <csv captureHeaderRecord="true"/>
+        </unmarshal>
+        <split>
+            <simple>${body}</simple>
+            <setBody>
+                <method beanType="net.alainpham.SimLogger"  method="helperCollectionToMap(${header[CamelCsvHeaderRecord]},${body})"/>
+            </setBody>
+            <setBody>
+                <method beanType="net.alainpham.SimLogger"  method="getInstance().addProcessedLine(${body})"/>
+            </setBody>
+        </split>
+        <setBody>
+            <method beanType="net.alainpham.SimLogger" method="getInstance().getProcessedLines()"/>
+        </setBody>
+    </route>
+
+
+    <route id="log" >
+        <from uri="timer:log?period=3000&amp;delay=3000&amp;synchronous=true&amp;daemon=false"/>
+        <setBody>
+            <method beanType="net.alainpham.SimLogger" method="getInstance().logNextLines()" />
+        </setBody>
+    </route>
+
+
+</routes>
